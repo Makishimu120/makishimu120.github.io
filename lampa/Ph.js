@@ -1,2 +1,2 @@
-pornhub.org##div[id*=age-verification-wrapper]
-pornhub.org##div[id*=age-verification-container]
+rt.pornhub.org##div[id*=age-verification-wrapper]
+rt.pornhub.org##div[id*=age-verification-container]

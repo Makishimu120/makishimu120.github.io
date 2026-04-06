@@ -2,39 +2,41 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Пазлы с Drag&Drop - Яндекс Игры</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Пазлы - Яндекс Игры | Touch support</title>
     <style>
         * {
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 12px;
         }
 
         .game-container {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.35);
             border-radius: 48px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-            max-width: 900px;
+            padding: 12px;
+            backdrop-filter: blur(8px);
+            max-width: 600px;
             width: 100%;
+            margin: auto;
         }
 
         .game-panel {
-            background: white;
-            border-radius: 40px;
-            padding: 25px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            background: #fef7e0;
+            border-radius: 36px;
+            padding: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             text-align: center;
         }
 
@@ -43,59 +45,70 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 16px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 12px 24px;
-            border-radius: 60px;
+            padding: 10px 18px;
+            border-radius: 50px;
             color: white;
         }
 
         .level-badge {
             background: #ff6b6b;
-            padding: 6px 20px;
+            padding: 5px 16px;
             border-radius: 40px;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1rem;
         }
 
         .progress {
             background: rgba(0,0,0,0.3);
-            padding: 6px 18px;
+            padding: 5px 14px;
             border-radius: 40px;
             font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .image-status {
+            background: #e8f4f8;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-bottom: 12px;
+            color: #2c3e50;
         }
 
         .puzzle-grid {
             display: grid;
-            gap: 4px;
+            gap: 3px;
             background: #2c3e50;
-            padding: 20px;
+            padding: 12px;
             border-radius: 24px;
-            margin: 20px 0;
+            margin: 12px 0;
             justify-content: center;
-            min-height: 400px;
+            touch-action: none;
         }
 
         .puzzle-tile {
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
-            border-radius: 12px;
-            cursor: grab;
-            transition: transform 0.1s, box-shadow 0.1s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border-radius: 10px;
+            touch-action: none;
+            cursor: pointer;
+            transition: transform 0.08s linear, box-shadow 0.1s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
             aspect-ratio: 1 / 1;
-            position: relative;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .puzzle-tile:active {
-            cursor: grabbing;
+            transform: scale(0.97);
         }
 
         .puzzle-tile.dragging {
-            opacity: 0.5;
-            cursor: grabbing;
+            opacity: 0.6;
+            transform: scale(0.95);
         }
 
         .puzzle-tile.drag-over {
@@ -106,8 +119,8 @@
         .controls {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
+            gap: 10px;
+            margin-top: 16px;
             flex-wrap: wrap;
         }
 
@@ -115,14 +128,15 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
             font-weight: bold;
-            font-size: 1rem;
-            padding: 12px 28px;
+            font-size: 0.85rem;
+            padding: 10px 18px;
             border-radius: 40px;
             font-family: inherit;
             cursor: pointer;
             color: white;
-            transition: transform 0.1s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.08s;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+            touch-action: manipulation;
         }
 
         button:active {
@@ -130,43 +144,74 @@
         }
 
         .message {
-            margin-top: 15px;
+            margin-top: 14px;
             font-weight: bold;
             background: #4ecdc4;
-            padding: 10px 24px;
+            padding: 8px 16px;
             border-radius: 40px;
             display: inline-block;
             color: white;
-            font-size: 1rem;
+            font-size: 0.85rem;
         }
 
         .complexity-info {
-            margin-top: 12px;
-            font-size: 0.85rem;
+            margin-top: 10px;
+            font-size: 0.7rem;
             color: #666;
             font-weight: 500;
         }
 
-        .image-status {
-            margin-bottom: 15px;
-            padding: 10px;
-            background: #e8f4f8;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            color: #2c3e50;
-        }
-
-        @media (max-width: 600px) {
+        /* Адаптация для очень узких экранов */
+        @media (max-width: 500px) {
+            body {
+                padding: 8px;
+            }
             .game-panel {
-                padding: 15px;
+                padding: 12px;
             }
             .puzzle-grid {
                 gap: 2px;
-                padding: 12px;
+                padding: 8px;
             }
             button {
-                padding: 8px 18px;
-                font-size: 0.9rem;
+                padding: 8px 14px;
+                font-size: 0.8rem;
+            }
+            .level-badge {
+                font-size: 0.85rem;
+                padding: 4px 12px;
+            }
+            .progress {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Для очень маленьких экранов (iPhone SE и подобные) */
+        @media (max-width: 380px) {
+            .controls {
+                gap: 6px;
+            }
+            button {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+            .message {
+                font-size: 0.75rem;
+                padding: 6px 12px;
+            }
+        }
+
+        /* Альбомная ориентация */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .game-container {
+                padding: 6px;
+            }
+            .game-panel {
+                padding: 8px;
+            }
+            .puzzle-grid {
+                max-height: 50vh;
+                overflow-y: auto;
             }
         }
     </style>
@@ -183,25 +228,26 @@
         </div>
 
         <div id="imageStatus" class="image-status">
-            📁 Загрузка картинок из папки images...
+            📁 Загрузка картинок...
         </div>
 
         <div id="puzzleGrid" class="puzzle-grid"></div>
 
         <div class="controls">
             <button id="shuffleBtn">🔀 Перемешать</button>
-            <button id="nextBtn">➡ Следующий уровень</button>
+            <button id="nextBtn">➡ Следующий</button>
             <button id="resetBtn">🔄 Сброс</button>
         </div>
         
-        <div id="message" class="message">✨ Перетаскивайте кусочки мышкой! ✨</div>
+        <div id="message" class="message">👆 Нажмите и перетащите плитку пальцем</div>
         <div class="complexity-info" id="complexityText"></div>
     </div>
 </div>
 
 <script>
     // =====================================================
-    // ПАЗЛЫ С DRAG & DROP - РАБОТАЕТ С ПАПКОЙ images/
+    // ПАЗЛЫ ДЛЯ СМАРТФОНОВ - ПОДДЕРЖКА ТАЧЕЙ
+    // Drag & drop пальцем, картинки из папки images/
     // =====================================================
     
     class PuzzleGame {
@@ -212,6 +258,8 @@
             this.tiles = [];
             this.draggedIndex = null;
             this.levelCompleted = false;
+            this.touchStartX = 0;
+            this.touchStartY = 0;
             
             // DOM элементы
             this.gridContainer = document.getElementById('puzzleGrid');
@@ -226,7 +274,13 @@
             document.getElementById('nextBtn').addEventListener('click', () => this.nextLevel());
             document.getElementById('resetBtn').addEventListener('click', () => this.reset());
             
-            // Запуск
+            // Запрещаем скролл при таче на гриде
+            this.gridContainer.addEventListener('touchmove', (e) => {
+                if (this.draggedIndex !== null) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
             this.init();
         }
         
@@ -241,11 +295,11 @@
         }
         
         async init() {
-            this.showMessage('🔍 Загрузка картинок из папки images/...');
+            this.showMessage('🔍 Поиск картинок в папке images/...');
             await this.loadImagesFromFolder();
             
             if (this.images.length === 0) {
-                this.imageStatus.innerHTML = '⚠️ Картинки не найдены! Создаю демо-уровни.<br>📌 Положите файлы 1.jpg, 2.jpg и т.д. в папку images/';
+                this.imageStatus.innerHTML = '⚠️ Картинки не найдены!<br>📌 Положите файлы 1.jpg, 2.jpg и т.д. в папку images/';
                 this.createDemoImages();
             } else {
                 this.imageStatus.innerHTML = `✅ Найдено картинок: ${this.images.length}<br>📁 Папка images/ (1.jpg, 2.jpg, ...)`;
@@ -258,8 +312,6 @@
         }
         
         async loadImagesFromFolder() {
-            // Пытаемся загрузить картинки из папки images/
-            // Используем последовательную проверку существующих файлов
             const extensions = ['jpg', 'jpeg', 'png', 'webp'];
             const foundImages = [];
             
@@ -268,7 +320,6 @@
                 for (const ext of extensions) {
                     const url = `./images/${i}.${ext}`;
                     try {
-                        // Используем Image объект для проверки загрузки (без CORS проблем)
                         const img = new Image();
                         await new Promise((resolve) => {
                             img.onload = () => {
@@ -281,12 +332,9 @@
                         
                         if (found) {
                             foundImages.push(url);
-                            console.log(`Найдена: ${i}.${ext}`);
                             break;
                         }
-                    } catch(e) {
-                        console.log(`Ошибка проверки ${i}.${ext}`);
-                    }
+                    } catch(e) {}
                 }
                 if (!found && foundImages.length > 0 && i > foundImages.length + 3) {
                     break;
@@ -295,12 +343,10 @@
             
             if (foundImages.length > 0) {
                 this.images = foundImages;
-                console.log('Загружено картинок:', this.images.length);
             }
         }
         
         createDemoImages() {
-            // Создаём демо-картинки через canvas (работает без CORS)
             for (let i = 1; i <= 6; i++) {
                 const canvas = document.createElement('canvas');
                 canvas.width = 400;
@@ -314,7 +360,6 @@
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, 400, 400);
                 
-                // Рисуем красивый узор
                 ctx.strokeStyle = 'white';
                 ctx.lineWidth = 5;
                 ctx.beginPath();
@@ -334,7 +379,7 @@
                 
                 this.images.push(canvas.toDataURL());
             }
-            this.showMessage('🎨 Демо-уровни созданы! Положите свои картинки в папку images/', false);
+            this.showMessage('🎨 Демо-уровни готовы!', false);
         }
         
         getDifficultyForLevel(level) {
@@ -344,7 +389,7 @@
         
         async loadLevel(level) {
             if (level >= this.images.length) {
-                this.showMessage('🏆 Поздравляем! Вы прошли все уровни! 🏆');
+                this.showMessage('🏆 Вы прошли все уровни! 🏆');
                 return false;
             }
             
@@ -357,17 +402,16 @@
             
             this.levelDisplay.textContent = `Уровень ${level + 1}`;
             this.levelCounter.textContent = `${level + 1} / ${this.images.length}`;
-            this.complexityText.textContent = `📐 Сложность: ${this.gridSize}×${this.gridSize} (${totalTiles} фрагментов) | 💡 Перетаскивайте кусочки`;
+            this.complexityText.textContent = `📐 ${this.gridSize}×${this.gridSize} (${totalTiles} фрагментов) | 👆 Перетащите пальцем`;
             
             const imgUrl = this.images[level];
             
-            // Создаём перемешанные тайлы
             this.tiles = Array.from({ length: totalTiles }, (_, i) => i);
             this.shuffleArray(this.tiles);
             
             await this.renderGrid(imgUrl);
             
-            this.showMessage(`🎮 Уровень ${level + 1} | Соберите пазл перетаскиванием!`);
+            this.showMessage(`🎮 Уровень ${level + 1} | Собирайте пазл!`);
             return true;
         }
         
@@ -379,7 +423,6 @@
         }
         
         async renderGrid(imgUrl) {
-            // Предзагрузка картинки
             const img = new Image();
             await new Promise((resolve) => {
                 img.onload = resolve;
@@ -387,8 +430,12 @@
                 img.src = imgUrl;
             });
             
+            // Адаптивный размер ячейки
+            const containerWidth = this.gridContainer.clientWidth;
+            const tileSize = Math.min(120, containerWidth / this.gridSize - 4);
+            
             this.gridContainer.style.gridTemplateColumns = `repeat(${this.gridSize}, 1fr)`;
-            this.gridContainer.style.gap = `${Math.max(2, 6 - Math.floor(this.gridSize / 2))}px`;
+            this.gridContainer.style.gap = `${Math.max(2, 4 - Math.floor(this.gridSize / 3))}px`;
             this.gridContainer.innerHTML = '';
             
             const total = this.gridSize * this.gridSize;
@@ -396,146 +443,144 @@
             for (let i = 0; i < total; i++) {
                 const tile = document.createElement('div');
                 tile.className = 'puzzle-tile';
-                tile.setAttribute('draggable', 'true');
                 tile.setAttribute('data-index', i);
                 
                 tile.style.backgroundImage = `url('${imgUrl}')`;
+                this.updateTileBackground(tile, this.tiles[i]);
                 
-                const fragmentId = this.tiles[i];
-                const row = Math.floor(fragmentId / this.gridSize);
-                const col = fragmentId % this.gridSize;
+                // Mouse события (для ПК)
+                tile.addEventListener('dragstart', (e) => {
+                    e.preventDefault();
+                    return false;
+                });
+                tile.addEventListener('mousedown', (e) => this.onMouseDown(e, i));
                 
-                tile.style.backgroundSize = `${this.gridSize * 100}% ${this.gridSize * 100}%`;
-                const xPos = this.gridSize === 1 ? 0 : (col / (this.gridSize - 1)) * 100;
-                const yPos = this.gridSize === 1 ? 0 : (row / (this.gridSize - 1)) * 100;
-                tile.style.backgroundPosition = `${xPos}% ${yPos}%`;
-                
-                // Drag & Drop события
-                tile.addEventListener('dragstart', (e) => this.onDragStart(e, i));
-                tile.addEventListener('dragend', (e) => this.onDragEnd(e));
-                tile.addEventListener('dragover', (e) => this.onDragOver(e, i));
-                tile.addEventListener('dragleave', (e) => this.onDragLeave(e));
-                tile.addEventListener('drop', (e) => this.onDrop(e, i));
-                
-                // Для touch устройств (мобильные)
-                tile.addEventListener('touchstart', (e) => this.onTouchStart(e, i));
-                tile.addEventListener('touchmove', (e) => this.onTouchMove(e));
-                tile.addEventListener('touchend', (e) => this.onTouchEnd(e, i));
+                // Touch события для смартфонов
+                tile.addEventListener('touchstart', (e) => this.onTouchStart(e, i), { passive: false });
+                tile.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
+                tile.addEventListener('touchend', (e) => this.onTouchEnd(e));
                 
                 this.gridContainer.appendChild(tile);
             }
         }
         
-        updateTilesVisuals() {
+        updateTileBackground(tile, fragmentId) {
             const imgUrl = this.images[this.currentLevel];
-            const total = this.gridSize * this.gridSize;
+            const row = Math.floor(fragmentId / this.gridSize);
+            const col = fragmentId % this.gridSize;
             
+            tile.style.backgroundImage = `url('${imgUrl}')`;
+            tile.style.backgroundSize = `${this.gridSize * 100}% ${this.gridSize * 100}%`;
+            const xPos = this.gridSize === 1 ? 0 : (col / (this.gridSize - 1)) * 100;
+            const yPos = this.gridSize === 1 ? 0 : (row / (this.gridSize - 1)) * 100;
+            tile.style.backgroundPosition = `${xPos}% ${yPos}%`;
+        }
+        
+        updateAllTiles() {
+            const total = this.gridSize * this.gridSize;
             for (let i = 0; i < total; i++) {
                 const tile = this.gridContainer.children[i];
-                if (!tile) continue;
-                
-                const fragmentId = this.tiles[i];
-                const row = Math.floor(fragmentId / this.gridSize);
-                const col = fragmentId % this.gridSize;
-                
-                tile.style.backgroundImage = `url('${imgUrl}')`;
-                tile.style.backgroundSize = `${this.gridSize * 100}% ${this.gridSize * 100}%`;
-                const xPos = this.gridSize === 1 ? 0 : (col / (this.gridSize - 1)) * 100;
-                const yPos = this.gridSize === 1 ? 0 : (row / (this.gridSize - 1)) * 100;
-                tile.style.backgroundPosition = `${xPos}% ${yPos}%`;
+                if (tile) {
+                    this.updateTileBackground(tile, this.tiles[i]);
+                }
             }
         }
         
-        // Drag & Drop Handlers
-        onDragStart(e, index) {
-            if (this.levelCompleted) {
-                e.preventDefault();
-                return false;
-            }
-            this.draggedIndex = index;
-            e.dataTransfer.setData('text/plain', index);
-            e.dataTransfer.effectAllowed = 'move';
-            e.target.classList.add('dragging');
-        }
-        
-        onDragEnd(e) {
-            e.target.classList.remove('dragging');
-            this.draggedIndex = null;
-            // Убираем подсветку со всех элементов
-            document.querySelectorAll('.puzzle-tile').forEach(tile => {
-                tile.classList.remove('drag-over');
-            });
-        }
-        
-        onDragOver(e, index) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            if (!this.levelCompleted && this.draggedIndex !== null && this.draggedIndex !== index) {
-                e.target.classList.add('drag-over');
-            }
-        }
-        
-        onDragLeave(e) {
-            e.target.classList.remove('drag-over');
-        }
-        
-        onDrop(e, targetIndex) {
-            e.preventDefault();
-            e.target.classList.remove('drag-over');
-            
-            if (this.levelCompleted) {
-                this.showMessage('Уровень пройден! Перейдите к следующему', true);
-                return;
-            }
-            
-            const sourceIndex = this.draggedIndex;
-            if (sourceIndex === null || sourceIndex === targetIndex) return;
-            
-            // Меняем местами
-            [this.tiles[sourceIndex], this.tiles[targetIndex]] = [this.tiles[targetIndex], this.tiles[sourceIndex]];
-            this.updateTilesVisuals();
-            this.draggedIndex = null;
-            
-            this.checkVictory();
-        }
-        
-        // Touch события для мобильных устройств
-        onTouchStart(e, index) {
+        // Mouse поддержка для ПК
+        onMouseDown(e, index) {
             if (this.levelCompleted) return;
             e.preventDefault();
             this.draggedIndex = index;
-            e.target.style.opacity = '0.7';
+            e.target.classList.add('dragging');
+            
+            const onMouseUp = (upEvent) => {
+                const targetElement = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
+                let targetIndex = null;
+                if (targetElement && targetElement.classList && targetElement.classList.contains('puzzle-tile')) {
+                    targetIndex = parseInt(targetElement.getAttribute('data-index'));
+                }
+                
+                if (targetIndex !== null && targetIndex !== this.draggedIndex && !this.levelCompleted) {
+                    [this.tiles[this.draggedIndex], this.tiles[targetIndex]] = 
+                    [this.tiles[targetIndex], this.tiles[this.draggedIndex]];
+                    this.updateAllTiles();
+                    this.checkVictory();
+                }
+                
+                e.target.classList.remove('dragging');
+                this.draggedIndex = null;
+                document.removeEventListener('mouseup', onMouseUp);
+            };
+            
+            document.addEventListener('mouseup', onMouseUp);
+        }
+        
+        // Touch события для смартфонов (основное)
+        onTouchStart(e, index) {
+            if (this.levelCompleted) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            this.draggedIndex = index;
+            const touch = e.touches[0];
+            this.touchStartX = touch.clientX;
+            this.touchStartY = touch.clientY;
+            
+            const tile = e.target;
+            tile.classList.add('dragging');
         }
         
         onTouchMove(e) {
             if (this.draggedIndex === null) return;
             e.preventDefault();
+            
             const touch = e.touches[0];
             const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // Убираем подсветку со всех
+            document.querySelectorAll('.puzzle-tile').forEach(tile => {
+                tile.classList.remove('drag-over');
+            });
+            
             if (element && element.classList && element.classList.contains('puzzle-tile')) {
-                document.querySelectorAll('.puzzle-tile').forEach(tile => {
-                    tile.classList.remove('drag-over');
-                });
                 element.classList.add('drag-over');
             }
         }
         
-        onTouchEnd(e, targetIndex) {
-            if (this.draggedIndex === null) return;
+        onTouchEnd(e) {
+            if (this.draggedIndex === null) {
+                e.preventDefault();
+                return;
+            }
             e.preventDefault();
             
-            const sourceIndex = this.draggedIndex;
+            // Находим элемент под пальцем
+            const touch = e.changedTouches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
             
-            // Сброс стилей
+            let targetIndex = null;
+            if (element && element.classList && element.classList.contains('puzzle-tile')) {
+                targetIndex = parseInt(element.getAttribute('data-index'));
+            }
+            
+            // Снимаем подсветку
             document.querySelectorAll('.puzzle-tile').forEach(tile => {
                 tile.classList.remove('drag-over');
-                tile.style.opacity = '1';
+                tile.classList.remove('dragging');
             });
             
-            if (sourceIndex !== targetIndex && !this.levelCompleted) {
-                [this.tiles[sourceIndex], this.tiles[targetIndex]] = [this.tiles[targetIndex], this.tiles[sourceIndex]];
-                this.updateTilesVisuals();
+            // Обмен плиток
+            if (targetIndex !== null && targetIndex !== this.draggedIndex && !this.levelCompleted) {
+                [this.tiles[this.draggedIndex], this.tiles[targetIndex]] = 
+                [this.tiles[targetIndex], this.tiles[this.draggedIndex]];
+                this.updateAllTiles();
                 this.checkVictory();
+                
+                // Виброотклик (если поддерживается)
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
             }
             
             this.draggedIndex = null;
@@ -556,27 +601,35 @@
                 this.levelCompleted = true;
                 this.showMessage(`🎉 Уровень ${this.currentLevel + 1} пройден! 🎉`);
                 
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+                
                 if (this.currentLevel + 1 < this.images.length) {
                     setTimeout(() => {
                         this.nextLevel();
                     }, 1500);
                 } else {
-                    this.showMessage('🏆 ПОБЕДА! Вы прошли ВСЕ уровни! 🏆');
+                    this.showMessage('🏆 ПОБЕДА! Все уровни пройдены! 🏆');
                 }
             }
         }
         
         shuffle() {
             if (this.levelCompleted) {
-                this.showMessage('Сначала перейдите на следующий уровень', true);
+                this.showMessage('Уровень пройден! Перейдите на следующий', true);
                 return;
             }
             
             const total = this.gridSize * this.gridSize;
             this.shuffleArray(this.tiles);
-            this.updateTilesVisuals();
+            this.updateAllTiles();
             this.draggedIndex = null;
             this.showMessage('🔀 Пазл перемешан!');
+            
+            if (navigator.vibrate) {
+                navigator.vibrate(30);
+            }
         }
         
         reset() {
@@ -584,7 +637,7 @@
             const total = this.gridSize * this.gridSize;
             this.tiles = Array.from({ length: total }, (_, i) => i);
             this.shuffleArray(this.tiles);
-            this.updateTilesVisuals();
+            this.updateAllTiles();
             this.draggedIndex = null;
             this.showMessage('🔄 Уровень сброшен');
         }
@@ -592,13 +645,16 @@
         nextLevel() {
             if (!this.levelCompleted && !this.isLevelComplete()) {
                 this.showMessage('Сначала соберите текущий пазл!', true);
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
                 return;
             }
             
             if (this.currentLevel + 1 < this.images.length) {
                 this.loadLevel(this.currentLevel + 1);
             } else {
-                this.showMessage('🎉 Это последний уровень! Вы великолепны! 🎉');
+                this.showMessage('🎉 Это финал! Вы великолепны! 🎉');
             }
         }
         

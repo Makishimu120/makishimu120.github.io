@@ -1,1 +1,574 @@
-qwe
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Пазлы - Локальная версия</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 48px;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .game-panel {
+            background: #f5f5f5;
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 12px 24px;
+            border-radius: 60px;
+            color: white;
+        }
+
+        .level-badge {
+            background: #ff6b6b;
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .progress {
+            background: rgba(0,0,0,0.3);
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: bold;
+        }
+
+        .puzzle-grid {
+            display: grid;
+            gap: 3px;
+            background: #2c3e50;
+            padding: 15px;
+            border-radius: 24px;
+            margin: 15px 0;
+            justify-content: center;
+        }
+
+        .puzzle-tile {
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            aspect-ratio: 1 / 1;
+        }
+
+        .puzzle-tile:active {
+            transform: scale(0.97);
+        }
+
+        .puzzle-tile.selected {
+            box-shadow: 0 0 0 3px #ffd700, 0 0 0 6px #ffaa00;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            font-weight: bold;
+            font-size: 1rem;
+            padding: 10px 25px;
+            border-radius: 40px;
+            font-family: inherit;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.1s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin-top: 15px;
+            font-weight: bold;
+            background: #4ecdc4;
+            padding: 8px 20px;
+            border-radius: 40px;
+            display: inline-block;
+            color: white;
+        }
+
+        .complexity-info {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .image-upload {
+            margin: 15px 0;
+            padding: 15px;
+            background: #e0e0e0;
+            border-radius: 20px;
+        }
+
+        .image-upload input {
+            margin: 10px 0;
+            padding: 10px;
+        }
+
+        .image-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .image-preview {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .image-preview:hover {
+            border-color: #667eea;
+        }
+
+        @media (max-width: 600px) {
+            .game-panel {
+                padding: 15px;
+            }
+            .puzzle-grid {
+                gap: 2px;
+                padding: 10px;
+            }
+            button {
+                padding: 8px 18px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="game-panel">
+        <div class="game-header">
+            <div class="level-badge" id="levelDisplay">Уровень 1</div>
+            <div class="progress">
+                <span>🧩</span>
+                <span id="levelCounter">0 / 0</span>
+            </div>
+        </div>
+
+        <div id="puzzleGrid" class="puzzle-grid"></div>
+
+        <div class="controls">
+            <button id="shuffleBtn">🔀 Перемешать</button>
+            <button id="nextBtn">➡ Следующий</button>
+            <button id="resetBtn">🔄 Сброс</button>
+        </div>
+        
+        <div class="image-upload">
+            <h3>📸 Загрузите свои картинки:</h3>
+            <input type="file" id="imageUpload" multiple accept="image/jpeg,image/png,image/webp,image/gif">
+            <div id="imageList" class="image-list"></div>
+            <small style="color: #666;">Загрузите картинки для создания уровней (порядок = порядок уровней)</small>
+        </div>
+        
+        <div id="message" class="message">✨ Загрузите картинки или играйте с демо! ✨</div>
+        <div class="complexity-info" id="complexityText"></div>
+    </div>
+</div>
+
+<script>
+    // =====================================================
+    // ПАЗЛЫ - РАБОТАЕТ ЛОКАЛЬНО БЕЗ CORS ПРОБЛЕМ!
+    // =====================================================
+    
+    class PuzzleGame {
+        constructor() {
+            this.images = [];           // массив URL картинок (base64 или blob)
+            this.currentLevel = 0;
+            this.gridSize = 3;
+            this.tiles = [];
+            this.selectedTile = null;
+            this.levelCompleted = false;
+            
+            // DOM элементы
+            this.gridContainer = document.getElementById('puzzleGrid');
+            this.levelDisplay = document.getElementById('levelDisplay');
+            this.levelCounter = document.getElementById('levelCounter');
+            this.messageDiv = document.getElementById('message');
+            this.complexityText = document.getElementById('complexityText');
+            this.imageListDiv = document.getElementById('imageList');
+            
+            // Кнопки
+            document.getElementById('shuffleBtn').addEventListener('click', () => this.shuffle());
+            document.getElementById('nextBtn').addEventListener('click', () => this.nextLevel());
+            document.getElementById('resetBtn').addEventListener('click', () => this.reset());
+            
+            // Загрузка картинок
+            document.getElementById('imageUpload').addEventListener('change', (e) => this.handleImageUpload(e));
+            
+            // Создаем демо-картинки при старте
+            this.createDemoImages();
+            this.init();
+        }
+        
+        showMessage(text, isError = false) {
+            this.messageDiv.textContent = text;
+            this.messageDiv.style.background = isError ? '#e74c3c' : '#4ecdc4';
+            setTimeout(() => {
+                if (this.messageDiv.textContent === text) {
+                    this.messageDiv.style.background = '#4ecdc4';
+                }
+            }, 2000);
+        }
+        
+        createDemoImages() {
+            // СОЗДАЁМ КРАСИВЫЕ ДЕМО-КАРТИНКИ (НЕ ТРЕБУЮТ FETCH)
+            this.images = [];
+            const colors = [
+                ['#FF6B6B', '#FFE66D'], ['#4ECDC4', '#44B3AA'], 
+                ['#FFE66D', '#FF6B6B'], ['#95E77E', '#4CAF50'],
+                ['#FF9F4A', '#FF6B6B'], ['#A8E6CF', '#3B9C9C']
+            ];
+            
+            for (let i = 0; i < 6; i++) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 400;
+                canvas.height = 400;
+                const ctx = canvas.getContext('2d');
+                
+                // Градиент
+                const gradient = ctx.createLinearGradient(0, 0, 400, 400);
+                gradient.addColorStop(0, colors[i % colors.length][0]);
+                gradient.addColorStop(1, colors[i % colors.length][1]);
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 400, 400);
+                
+                // Рисуем узор
+                ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+                ctx.lineWidth = 8;
+                for (let j = 0; j < 3; j++) {
+                    ctx.beginPath();
+                    ctx.arc(200, 200, 80 + j * 40, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                
+                // Рисуем линии
+                ctx.beginPath();
+                ctx.moveTo(100, 100);
+                ctx.lineTo(300, 300);
+                ctx.moveTo(300, 100);
+                ctx.lineTo(100, 300);
+                ctx.stroke();
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 60px Arial';
+                ctx.shadowBlur = 10;
+                ctx.textAlign = 'center';
+                ctx.fillText(`${i + 1}`, 200, 240);
+                ctx.font = '30px Arial';
+                ctx.fillText('🧩', 200, 320);
+                
+                this.images.push(canvas.toDataURL());
+            }
+            
+            this.updateImageList();
+            this.showMessage('🎨 Демо-уровни готовы! Загрузите свои картинки для замены', false);
+        }
+        
+        handleImageUpload(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+            
+            const newImages = [];
+            let loaded = 0;
+            
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    newImages.push(e.target.result);
+                    loaded++;
+                    if (loaded === files.length) {
+                        // Заменяем картинки
+                        this.images = newImages;
+                        this.updateImageList();
+                        this.currentLevel = 0;
+                        this.loadLevel(0);
+                        this.showMessage(`✅ Загружено ${this.images.length} картинок!`, false);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        updateImageList() {
+            this.imageListDiv.innerHTML = '';
+            this.images.forEach((img, index) => {
+                const imgElement = document.createElement('img');
+                imgElement.src = img;
+                imgElement.className = 'image-preview';
+                imgElement.title = `Уровень ${index + 1}`;
+                imgElement.onclick = () => {
+                    this.currentLevel = index;
+                    this.loadLevel(index);
+                };
+                this.imageListDiv.appendChild(imgElement);
+            });
+            
+            if (this.images.length > 0) {
+                this.levelCounter.textContent = `0 / ${this.images.length}`;
+            }
+        }
+        
+        getDifficultyForLevel(level) {
+            // Сложность растёт с уровнем
+            const difficulties = [3, 4, 4, 5, 5, 6, 6, 6, 6, 6];
+            return level < difficulties.length ? difficulties[level] : 6;
+        }
+        
+        async loadLevel(level) {
+            if (level >= this.images.length) {
+                this.showMessage('🏆 Поздравляем! Вы прошли все уровни! 🏆');
+                return false;
+            }
+            
+            this.currentLevel = level;
+            this.levelCompleted = false;
+            this.selectedTile = null;
+            
+            this.gridSize = this.getDifficultyForLevel(level);
+            const totalTiles = this.gridSize * this.gridSize;
+            
+            this.levelDisplay.textContent = `Уровень ${level + 1}`;
+            this.levelCounter.textContent = `${level + 1} / ${this.images.length}`;
+            this.complexityText.textContent = `📐 Сложность: ${this.gridSize}×${this.gridSize} (${totalTiles} фрагментов)`;
+            
+            const imgUrl = this.images[level];
+            
+            // Создаём перемешанные тайлы
+            this.tiles = Array.from({ length: totalTiles }, (_, i) => i);
+            this.shuffleArray(this.tiles);
+            
+            await this.renderGrid(imgUrl);
+            
+            this.showMessage(`🎮 Уровень ${level + 1} готов! Собирайте пазл!`);
+            return true;
+        }
+        
+        shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        async renderGrid(imgUrl) {
+            // Предзагрузка картинки
+            const img = new Image();
+            await new Promise((resolve) => {
+                img.onload = resolve;
+                img.onerror = resolve;
+                img.src = imgUrl;
+            });
+            
+            this.gridContainer.style.gridTemplateColumns = `repeat(${this.gridSize}, 1fr)`;
+            this.gridContainer.style.gap = `${Math.max(2, 6 - Math.floor(this.gridSize / 2))}px`;
+            this.gridContainer.innerHTML = '';
+            
+            const total = this.gridSize * this.gridSize;
+            
+            for (let i = 0; i < total; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'puzzle-tile';
+                tile.style.backgroundImage = `url('${imgUrl}')`;
+                
+                const fragmentId = this.tiles[i];
+                const row = Math.floor(fragmentId / this.gridSize);
+                const col = fragmentId % this.gridSize;
+                
+                tile.style.backgroundSize = `${this.gridSize * 100}% ${this.gridSize * 100}%`;
+                const xPos = this.gridSize === 1 ? 0 : (col / (this.gridSize - 1)) * 100;
+                const yPos = this.gridSize === 1 ? 0 : (row / (this.gridSize - 1)) * 100;
+                tile.style.backgroundPosition = `${xPos}% ${yPos}%`;
+                
+                tile.addEventListener('click', () => this.onTileClick(i));
+                this.gridContainer.appendChild(tile);
+            }
+        }
+        
+        updateTilesVisuals() {
+            const imgUrl = this.images[this.currentLevel];
+            const total = this.gridSize * this.gridSize;
+            
+            for (let i = 0; i < total; i++) {
+                const tile = this.gridContainer.children[i];
+                if (!tile) continue;
+                
+                const fragmentId = this.tiles[i];
+                const row = Math.floor(fragmentId / this.gridSize);
+                const col = fragmentId % this.gridSize;
+                
+                tile.style.backgroundImage = `url('${imgUrl}')`;
+                tile.style.backgroundSize = `${this.gridSize * 100}% ${this.gridSize * 100}%`;
+                const xPos = this.gridSize === 1 ? 0 : (col / (this.gridSize - 1)) * 100;
+                const yPos = this.gridSize === 1 ? 0 : (row / (this.gridSize - 1)) * 100;
+                tile.style.backgroundPosition = `${xPos}% ${yPos}%`;
+            }
+        }
+        
+        onTileClick(index) {
+            if (this.levelCompleted) {
+                this.showMessage('🏁 Уровень пройден! Переходите к следующему', true);
+                return;
+            }
+            
+            if (this.selectedTile === null) {
+                this.selectedTile = index;
+                const tileElement = this.gridContainer.children[index];
+                tileElement.classList.add('selected');
+                setTimeout(() => {
+                    if (this.selectedTile === index) {
+                        tileElement.classList.remove('selected');
+                        if (this.selectedTile === index) this.selectedTile = null;
+                    }
+                }, 500);
+            } else if (this.selectedTile !== index) {
+                const first = this.selectedTile;
+                const second = index;
+                
+                [this.tiles[first], this.tiles[second]] = [this.tiles[second], this.tiles[first]];
+                this.updateTilesVisuals();
+                
+                const tileElement = this.gridContainer.children[first];
+                tileElement.classList.remove('selected');
+                this.selectedTile = null;
+                
+                this.checkVictory();
+            }
+        }
+        
+        checkVictory() {
+            const total = this.gridSize * this.gridSize;
+            let isComplete = true;
+            
+            for (let i = 0; i < total; i++) {
+                if (this.tiles[i] !== i) {
+                    isComplete = false;
+                    break;
+                }
+            }
+            
+            if (isComplete && !this.levelCompleted) {
+                this.levelCompleted = true;
+                this.showMessage(`🎉 Уровень ${this.currentLevel + 1} пройден! 🎉`);
+                
+                if (this.currentLevel + 1 < this.images.length) {
+                    setTimeout(() => {
+                        this.nextLevel();
+                    }, 1500);
+                } else {
+                    this.showMessage('🏆 ПОБЕДА! Вы прошли ВСЕ уровни! 🏆');
+                }
+            }
+        }
+        
+        shuffle() {
+            if (this.levelCompleted) {
+                this.showMessage('Сначала перейдите на следующий уровень', true);
+                return;
+            }
+            
+            const total = this.gridSize * this.gridSize;
+            this.shuffleArray(this.tiles);
+            this.updateTilesVisuals();
+            this.selectedTile = null;
+            this.showMessage('🔀 Пазл перемешан!');
+        }
+        
+        reset() {
+            this.levelCompleted = false;
+            const total = this.gridSize * this.gridSize;
+            this.tiles = Array.from({ length: total }, (_, i) => i);
+            this.shuffleArray(this.tiles);
+            this.updateTilesVisuals();
+            this.selectedTile = null;
+            this.showMessage('🔄 Уровень сброшен');
+        }
+        
+        nextLevel() {
+            if (!this.levelCompleted && !this.isLevelComplete()) {
+                this.showMessage('Сначала соберите текущий пазл!', true);
+                return;
+            }
+            
+            if (this.currentLevel + 1 < this.images.length) {
+                this.loadLevel(this.currentLevel + 1);
+            } else {
+                this.showMessage('🎉 Это последний уровень! Вы великолепны! 🎉');
+            }
+        }
+        
+        isLevelComplete() {
+            const total = this.gridSize * this.gridSize;
+            for (let i = 0; i < total; i++) {
+                if (this.tiles[i] !== i) return false;
+            }
+            return true;
+        }
+        
+        init() {
+            this.loadLevel(0);
+        }
+    }
+    
+    // Запуск игры
+    window.addEventListener('load', () => {
+        new PuzzleGame();
+    });
+</script>
+</body>
+</html>

@@ -234,6 +234,7 @@
         }
 
         .confetti-piece {
+			align-self: flex-start;
             position: fixed;
             z-index: 10001;
             pointer-events: none;
@@ -754,7 +755,7 @@
         
         startConfetti() {
             const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#88ff00'];
-            const confettiCount = 150;
+            const confettiCount = 200;
             
             for (let i = 0; i < confettiCount; i++) {
                 setTimeout(() => {
@@ -769,7 +770,7 @@
                     
                     setTimeout(() => {
                         confetti.remove();
-                    }, 3000);
+                    }, 3500);
                 }, i * 15);
             }
         }

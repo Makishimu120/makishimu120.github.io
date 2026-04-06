@@ -81,10 +81,10 @@
 
         .puzzle-grid {
             display: grid;
-            gap: 4px;
+            gap: 2px;
             background: #2c3e50;
             padding: 12px;
-            border-radius: 24px;
+            border-radius: 12px;
             margin: 12px 0;
             position: relative;
             touch-action: none;
@@ -94,11 +94,11 @@
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
-            border-radius: 10px;
+            border-radius: 4px;
             cursor: pointer;
             transition: transform 0.05s linear;
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            aspect-ratio: 1 / 1;
+            /*aspect-ratio: 1 / 1;*/
             touch-action: none;
         }
 
@@ -246,7 +246,7 @@
                 height: 65px;
             }
             .puzzle-grid {
-                gap: 3px;
+                gap: 2px;
                 padding: 8px;
             }
             button {
@@ -471,7 +471,8 @@
             
             // Устанавливаем стиль сетки
             this.gridContainer.style.gridTemplateColumns = `repeat(${this.cols}, 1fr)`;
-            this.gridContainer.style.aspectRatio = `${this.rows} / ${this.cols}`;
+            //this.gridContainer.style.aspectRatio = `${this.rows} / ${this.cols}`;
+			this.gridContainer.style.aspectRatio = `2 / 3`;
             
             const imgUrl = this.images[level];
             this.currentImageUrl = imgUrl;

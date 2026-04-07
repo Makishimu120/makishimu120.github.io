@@ -2,837 +2,95 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Пазлы - Яндекс Игры | Сложность растёт</title>
-    <style>
-        * {
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: none;
-        }
-
-        body {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif;
-            margin: 0;
-            padding: 12px;
-            position: relative;
-        }
-
-        .game-container {
-            background: rgba(0, 0, 0, 0.35);
-            border-radius: 48px;
-            padding: 12px;
-            backdrop-filter: blur(8px);
-            max-width: 550px;
-            width: 100%;
-            margin: auto;
-        }
-
-        .game-panel {
-            background: #fef7e0;
-            border-radius: 36px;
-            padding: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            text-align: center;
-        }
-
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 10px 18px;
-            border-radius: 50px;
-            color: white;
-        }
-
-        .level-badge {
-            background: #ff6b6b;
-            padding: 5px 16px;
-            border-radius: 40px;
-            font-weight: bold;
-            font-size: 1rem;
-        }
-
-        .progress {
-            background: rgba(0,0,0,0.3);
-            padding: 5px 14px;
-            border-radius: 40px;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        .image-status {
-            background: #e8f4f8;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            margin-bottom: 12px;
-            color: #2c3e50;
-        }
-
-        .puzzle-grid {
-            display: grid;
-            gap: 2px;
-            background: #2c3e50;
-            padding: 12px;
-            border-radius: 12px;
-            margin: 12px 0;
-            position: relative;
-            touch-action: none;
-        }
-
-        .puzzle-tile {
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: transform 0.05s linear;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            /*aspect-ratio: 1 / 1;*/
-            touch-action: none;
-        }
-
-        .puzzle-tile.empty-slot {
-            background: #34495e !important;
-            box-shadow: inset 0 0 0 2px #1a252f;
-            cursor: default;
-        }
-
-        /* Плавающая плитка */
-        .floating-tile {
-            position: fixed;
-            z-index: 9999;
-            width: 80px;
-            height: 80px;
-            border-radius: 12px;
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-            pointer-events: none;
-            opacity: 0.95;
-            transform: scale(1.02);
-        }
-
-        /* Модальное окно с полной картинкой */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-image {
-            max-width: 90%;
-            max-height: 60%;
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(255,255,255,0.3);
-            margin-bottom: 20px;
-        }
-
-        .modal-message {
-            color: white;
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .next-level-btn {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            border: none;
-            font-weight: bold;
-            font-size: 1.2rem;
-            padding: 12px 32px;
-            border-radius: 50px;
-            font-family: inherit;
-            cursor: pointer;
-            color: white;
-            transition: transform 0.1s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .next-level-btn:active {
-            transform: translateY(2px);
-        }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 16px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            font-weight: bold;
-            font-size: 0.85rem;
-            padding: 10px 18px;
-            border-radius: 40px;
-            font-family: inherit;
-            cursor: pointer;
-            color: white;
-            transition: transform 0.08s;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-            touch-action: manipulation;
-        }
-
-        button:active {
-            transform: translateY(2px);
-        }
-
-        .message {
-            margin-top: 14px;
-            font-weight: bold;
-            background: #4ecdc4;
-            padding: 8px 16px;
-            border-radius: 40px;
-            display: inline-block;
-            color: white;
-            font-size: 0.85rem;
-        }
-
-        .complexity-info {
-            margin-top: 10px;
-            font-size: 0.7rem;
-            color: #666;
-            font-weight: 500;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes confetti {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-        }
-
-        .confetti-piece {
-			align-self: flex-start;
-            position: fixed;
-            z-index: 10001;
-            pointer-events: none;
-            animation: confetti 3s ease-out forwards;
-        }
-
-        @media (max-width: 500px) {
-            .floating-tile {
-                width: 65px;
-                height: 65px;
-            }
-            .puzzle-grid {
-                gap: 2px;
-                padding: 8px;
-            }
-            button {
-                padding: 8px 14px;
-                font-size: 0.8rem;
-            }
-            .modal-message {
-                font-size: 1.2rem;
-            }
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Пазлы — Собери картинку!</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Yandex Games SDK -->
+    <script src="https://yandex.ru/games/sdk/v2"></script>
 </head>
 <body>
-<div class="game-container">
-    <div class="game-panel">
-        <div class="game-header">
-            <div class="level-badge" id="levelDisplay">Уровень 1</div>
-            <div class="progress">
-                <span>🧩</span>
-                <span id="levelCounter">0 / 0</span>
-            </div>
-        </div>
 
-        <div id="imageStatus" class="image-status">
-            📁 Загрузка картинок...
-        </div>
-
-        <div id="puzzleGrid" class="puzzle-grid"></div>
-
-        <div class="controls">
-            <button id="shuffleBtn">🔀 Перемешать</button>
-            <button id="resetBtn">🔄 Сброс</button>
-        </div>
-        
-        <div id="message" class="message">👆 Нажмите и тащите плитку - она будет следовать за пальцем</div>
-        <div class="complexity-info" id="complexityText"></div>
+<!-- Загрузочный экран -->
+<div id="loading-screen">
+    <div class="loader">
+        <div class="spinner"></div>
+        <p>Загрузка пазла...</p>
     </div>
 </div>
 
-<!-- Модальное окно с полной картинкой -->
-<div id="victoryModal" class="modal">
-    <img id="fullImage" class="modal-image" alt="Полная картинка">
-    <div class="modal-message" id="modalMessage">🎉 Поздравляем! 🎉</div>
-    <button class="next-level-btn" id="nextLevelBtn">➡ Следующий уровень</button>
+<!-- Главное меню -->
+<div id="menu-screen" class="screen hidden">
+    <h1>🧩 ПАЗЛЫ</h1>
+    <p class="subtitle">Собери все картинки!</p>
+    <button id="btn-play" class="btn btn-primary">▶ Играть</button>
+    <button id="btn-levels" class="btn btn-secondary">📋 Уровни</button>
+    <button id="btn-sound" class="btn btn-icon">🔊</button>
 </div>
 
-<script>
-    // =====================================================
-    // ПАЗЛЫ С ПРОГРЕССИРУЮЩЕЙ СЛОЖНОСТЬЮ
-    // Сетки: 3×3, 4×3, 4×4, 5×4 и далее 5×4
-    // После победы: полная картинка, конфетти, кнопка
-    // =====================================================
-    
-    class PuzzleGame {
-        constructor() {
-            this.images = [];
-            this.currentLevel = 0;
-            this.rows = 3;
-            this.cols = 3;
-            this.totalTiles = 9;
-            this.tiles = [];
-            this.draggedIndex = null;
-            this.levelCompleted = false;
-            this.floatingTile = null;
-            
-            // Сложность для каждого уровня (rows, cols)
-            this.difficulties = [
-                { rows: 3, cols: 3 },  // 1 уровень
-                { rows: 4, cols: 3 },  // 2 уровень
-                { rows: 4, cols: 4 },  // 3 уровень
-                { rows: 5, cols: 4 },  // 4 уровень
-                { rows: 5, cols: 4 },  // 5 уровень и дальше
-                { rows: 5, cols: 4 },
-                { rows: 5, cols: 4 },
-                { rows: 5, cols: 4 }
-            ];
-            
-            // DOM элементы
-            this.gridContainer = document.getElementById('puzzleGrid');
-            this.levelDisplay = document.getElementById('levelDisplay');
-            this.levelCounter = document.getElementById('levelCounter');
-            this.messageDiv = document.getElementById('message');
-            this.complexityText = document.getElementById('complexityText');
-            this.imageStatus = document.getElementById('imageStatus');
-            this.modal = document.getElementById('victoryModal');
-            this.fullImage = document.getElementById('fullImage');
-            this.modalMessage = document.getElementById('modalMessage');
-            
-            // Кнопки
-            document.getElementById('shuffleBtn').addEventListener('click', () => this.shuffle());
-            document.getElementById('resetBtn').addEventListener('click', () => this.reset());
-            document.getElementById('nextLevelBtn').addEventListener('click', () => this.closeModalAndNext());
-            
-            this.init();
-        }
-        
-        showMessage(text, isError = false) {
-            this.messageDiv.textContent = text;
-            this.messageDiv.style.background = isError ? '#e74c3c' : '#4ecdc4';
-            setTimeout(() => {
-                if (this.messageDiv.textContent === text) {
-                    this.messageDiv.style.background = '#4ecdc4';
-                }
-            }, 2000);
-        }
-        
-        async init() {
-            this.showMessage('🔍 Поиск картинок в папке images/...');
-            await this.loadImagesFromFolder();
-            
-            if (this.images.length === 0) {
-                this.imageStatus.innerHTML = '⚠️ Картинки не найдены!<br>📌 Положите файлы 1.jpg, 2.jpg и т.д. в папку images/';
-                this.createDemoImages();
-            } else {
-                this.imageStatus.innerHTML = `✅ Найдено картинок: ${this.images.length}<br>📁 Папка images/ (1.jpg, 2.jpg, ...)`;
-            }
-            
-            if (this.images.length > 0) {
-                this.levelCounter.textContent = `0 / ${this.images.length}`;
-                await this.loadLevel(0);
-            }
-        }
-        
-        async loadImagesFromFolder() {
-            const extensions = ['jpg', 'jpeg', 'png', 'webp'];
-            const foundImages = [];
-            
-            for (let i = 1; i <= 20; i++) {
-                let found = false;
-                for (const ext of extensions) {
-                    const url = `./images/${i}.${ext}`;
-                    try {
-                        const img = new Image();
-                        await new Promise((resolve) => {
-                            img.onload = () => {
-                                found = true;
-                                resolve(true);
-                            };
-                            img.onerror = () => resolve(false);
-                            img.src = url;
-                        });
-                        
-                        if (found) {
-                            foundImages.push(url);
-                            break;
-                        }
-                    } catch(e) {}
-                }
-                if (!found && foundImages.length > 0 && i > foundImages.length + 3) {
-                    break;
-                }
-            }
-            
-            if (foundImages.length > 0) {
-                this.images = foundImages;
-            }
-        }
-        
-        createDemoImages() {
-            for (let i = 1; i <= 8; i++) {
-                const canvas = document.createElement('canvas');
-                canvas.width = 500;
-                canvas.height = 500;
-                const ctx = canvas.getContext('2d');
-                
-                const gradient = ctx.createLinearGradient(0, 0, 500, 500);
-                const hue = (i * 45) % 360;
-                gradient.addColorStop(0, `hsl(${hue}, 70%, 60%)`);
-                gradient.addColorStop(1, `hsl(${hue + 40}, 70%, 50%)`);
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, 500, 500);
-                
-                // Рисуем красивый узор
-                ctx.strokeStyle = 'white';
-                ctx.lineWidth = 6;
-                for (let j = 0; j < 3; j++) {
-                    ctx.beginPath();
-                    ctx.arc(250, 250, 120 + j * 40, 0, Math.PI * 2);
-                    ctx.stroke();
-                }
-                
-                ctx.fillStyle = 'white';
-                ctx.font = 'bold 80px Arial';
-                ctx.shadowBlur = 10;
-                ctx.textAlign = 'center';
-                ctx.fillText(`${i}`, 250, 280);
-                ctx.font = '45px Arial';
-                ctx.fillText('🧩', 250, 370);
-                
-                this.images.push(canvas.toDataURL());
-            }
-            this.showMessage('🎨 Демо-уровни готовы!', false);
-        }
-        
-        getDifficultyForLevel(level) {
-            if (level < this.difficulties.length) {
-                return this.difficulties[level];
-            }
-            return this.difficulties[this.difficulties.length - 1];
-        }
-        
-        async loadLevel(level) {
-            if (level >= this.images.length) {
-                this.showMessage('🏆 Вы прошли все уровни! 🏆');
-                return false;
-            }
-            
-            this.currentLevel = level;
-            this.levelCompleted = false;
-            this.draggedIndex = null;
-            this.removeFloatingTile();
-            this.closeModal();
-            
-            const difficulty = this.getDifficultyForLevel(level);
-            this.rows = difficulty.rows;
-            this.cols = difficulty.cols;
-            this.totalTiles = this.rows * this.cols;
-            
-            this.levelDisplay.textContent = `Уровень ${level + 1}`;
-            this.levelCounter.textContent = `${level + 1} / ${this.images.length}`;
-            this.complexityText.textContent = `📐 Сетка: ${this.rows}×${this.cols} (${this.totalTiles} фрагментов) | 👆 Тащите плитку за собой`;
-            
-            // Устанавливаем стиль сетки
-            this.gridContainer.style.gridTemplateColumns = `repeat(${this.cols}, 1fr)`;
-            //this.gridContainer.style.aspectRatio = `${this.rows} / ${this.cols}`;
-			this.gridContainer.style.aspectRatio = `2 / 3`;
-            
-            const imgUrl = this.images[level];
-            this.currentImageUrl = imgUrl;
-            
-            // Создаём перемешанные тайлы
-            this.tiles = Array.from({ length: this.totalTiles }, (_, i) => i);
-            this.shuffleArray(this.tiles);
-            
-            await this.renderGrid(imgUrl);
-            
-            this.showMessage(`🎮 Уровень ${level + 1} | Сетка ${this.rows}×${this.cols}`);
-            return true;
-        }
-        
-        shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
-        
-        async renderGrid(imgUrl) {
-            const img = new Image();
-            await new Promise((resolve) => {
-                img.onload = resolve;
-                img.onerror = resolve;
-                img.src = imgUrl;
-            });
-            
-            this.gridContainer.innerHTML = '';
-            
-            for (let i = 0; i < this.totalTiles; i++) {
-                const tile = document.createElement('div');
-                tile.className = 'puzzle-tile';
-                tile.setAttribute('data-index', i);
-                
-                this.updateTileBackground(tile, this.tiles[i]);
-                
-                // Mouse события
-                tile.addEventListener('mousedown', (e) => this.onDragStart(e, i));
-                tile.addEventListener('dragstart', (e) => e.preventDefault());
-                
-                // Touch события
-                tile.addEventListener('touchstart', (e) => this.onDragStart(e, i), { passive: false });
-                
-                this.gridContainer.appendChild(tile);
-            }
-        }
-        
-        updateTileBackground(tile, fragmentId) {
-            const imgUrl = this.images[this.currentLevel];
-            const row = Math.floor(fragmentId / this.cols);
-            const col = fragmentId % this.cols;
-            
-            tile.style.backgroundImage = `url('${imgUrl}')`;
-            tile.style.backgroundSize = `${this.cols * 100}% ${this.rows * 100}%`;
-            const xPos = this.cols === 1 ? 0 : (col / (this.cols - 1)) * 100;
-            const yPos = this.rows === 1 ? 0 : (row / (this.rows - 1)) * 100;
-            tile.style.backgroundPosition = `${xPos}% ${yPos}%`;
-        }
-        
-        updateAllTiles() {
-            for (let i = 0; i < this.totalTiles; i++) {
-                const tile = this.gridContainer.children[i];
-                if (tile && !tile.classList.contains('empty-slot')) {
-                    this.updateTileBackground(tile, this.tiles[i]);
-                }
-            }
-        }
-        
-        createEmptySlot(index) {
-            const tile = this.gridContainer.children[index];
-            if (tile) {
-                tile.classList.add('empty-slot');
-                tile.style.backgroundImage = 'none';
-                tile.style.backgroundColor = '#34495e';
-            }
-        }
-        
-        removeEmptySlot(index) {
-            const tile = this.gridContainer.children[index];
-            if (tile) {
-                tile.classList.remove('empty-slot');
-                this.updateTileBackground(tile, this.tiles[index]);
-            }
-        }
-        
-        removeAllEmptySlots() {
-            for (let i = 0; i < this.totalTiles; i++) {
-                const tile = this.gridContainer.children[i];
-                if (tile) {
-                    tile.classList.remove('empty-slot');
-                    if (this.tiles[i] !== undefined) {
-                        this.updateTileBackground(tile, this.tiles[i]);
-                    }
-                }
-            }
-        }
-        
-        createFloatingTile(fragmentId, clientX, clientY) {
-            this.removeFloatingTile();
-            
-            const imgUrl = this.images[this.currentLevel];
-            const row = Math.floor(fragmentId / this.cols);
-            const col = fragmentId % this.cols;
-            
-            this.floatingTile = document.createElement('div');
-            this.floatingTile.className = 'floating-tile';
-            this.floatingTile.style.backgroundImage = `url('${imgUrl}')`;
-            this.floatingTile.style.backgroundSize = `${this.cols * 100}% ${this.rows * 100}%`;
-            const xPos = this.cols === 1 ? 0 : (col / (this.cols - 1)) * 100;
-            const yPos = this.rows === 1 ? 0 : (row / (this.rows - 1)) * 100;
-            this.floatingTile.style.backgroundPosition = `${xPos}% ${yPos}%`;
-            
-            const sourceTile = this.gridContainer.children[this.draggedIndex];
-            if (sourceTile) {
-                const rect = sourceTile.getBoundingClientRect();
-                this.floatingTile.style.width = `${rect.width}px`;
-                this.floatingTile.style.height = `${rect.height}px`;
-            } else {
-                this.floatingTile.style.width = '80px';
-                this.floatingTile.style.height = '80px';
-            }
-            
-            this.floatingTile.style.left = `${clientX - this.floatingTile.offsetWidth / 2}px`;
-            this.floatingTile.style.top = `${clientY - this.floatingTile.offsetHeight / 2}px`;
-            
-            document.body.appendChild(this.floatingTile);
-        }
-        
-        removeFloatingTile() {
-            if (this.floatingTile) {
-                this.floatingTile.remove();
-                this.floatingTile = null;
-            }
-        }
-        
-        updateFloatingTilePosition(clientX, clientY) {
-            if (this.floatingTile) {
-                this.floatingTile.style.left = `${clientX - this.floatingTile.offsetWidth / 2}px`;
-                this.floatingTile.style.top = `${clientY - this.floatingTile.offsetHeight / 2}px`;
-            }
-        }
-        
-        onDragStart(e, index) {
-            if (this.levelCompleted) return;
-            e.preventDefault();
-            
-            this.draggedIndex = index;
-            const fragmentId = this.tiles[index];
-            
-            this.createEmptySlot(index);
-            
-            const clientX = e.clientX ?? (e.touches ? e.touches[0].clientX : 0);
-            const clientY = e.clientY ?? (e.touches ? e.touches[0].clientY : 0);
-            this.createFloatingTile(fragmentId, clientX, clientY);
-            
-            if (e.type === 'mousedown') {
-                window.addEventListener('mousemove', this.onMouseMove);
-                window.addEventListener('mouseup', this.onMouseUp);
-            } else {
-                window.addEventListener('touchmove', this.onTouchMove, { passive: false });
-                window.addEventListener('touchend', this.onTouchEnd);
-                window.addEventListener('touchcancel', this.onTouchEnd);
-            }
-        }
-        
-        onMouseMove = (e) => {
-            if (this.draggedIndex === null) return;
-            e.preventDefault();
-            this.updateFloatingTilePosition(e.clientX, e.clientY);
-            this.highlightTargetTile(e.clientX, e.clientY);
-        }
-        
-        onTouchMove = (e) => {
-            if (this.draggedIndex === null) return;
-            e.preventDefault();
-            const touch = e.touches[0];
-            this.updateFloatingTilePosition(touch.clientX, touch.clientY);
-            this.highlightTargetTile(touch.clientX, touch.clientY);
-        }
-        
-        highlightTargetTile(clientX, clientY) {
-            this.removeAllHighlights();
-            const elem = document.elementFromPoint(clientX, clientY);
-            if (elem && elem.classList && elem.classList.contains('puzzle-tile') && !elem.classList.contains('empty-slot')) {
-                elem.style.transform = 'scale(0.95)';
-                elem.style.transition = 'transform 0.08s';
-                elem.style.boxShadow = '0 0 0 3px #ffd700, 0 0 0 6px #ffaa00';
-            }
-        }
-        
-        removeAllHighlights() {
-            for (let i = 0; i < this.totalTiles; i++) {
-                const tile = this.gridContainer.children[i];
-                if (tile) {
-                    tile.style.transform = '';
-                    tile.style.boxShadow = '';
-                }
-            }
-        }
-        
-        onMouseUp = (e) => {
-            this.finishDrag(e.clientX, e.clientY);
-            window.removeEventListener('mousemove', this.onMouseMove);
-            window.removeEventListener('mouseup', this.onMouseUp);
-        }
-        
-        onTouchEnd = (e) => {
-            const touch = e.changedTouches[0];
-            this.finishDrag(touch.clientX, touch.clientY);
-            window.removeEventListener('touchmove', this.onTouchMove);
-            window.removeEventListener('touchend', this.onTouchEnd);
-            window.removeEventListener('touchcancel', this.onTouchEnd);
-        }
-        
-        finishDrag(clientX, clientY) {
-            if (this.draggedIndex === null) return;
-            
-            const elem = document.elementFromPoint(clientX, clientY);
-            let targetIndex = null;
-            
-            if (elem && elem.classList && elem.classList.contains('puzzle-tile') && !elem.classList.contains('empty-slot')) {
-                targetIndex = parseInt(elem.getAttribute('data-index'));
-            }
-            
-            this.removeAllHighlights();
-            
-            if (targetIndex !== null && targetIndex !== this.draggedIndex && !this.levelCompleted) {
-                [this.tiles[this.draggedIndex], this.tiles[targetIndex]] = 
-                [this.tiles[targetIndex], this.tiles[this.draggedIndex]];
-                
-                this.removeEmptySlot(this.draggedIndex);
-                this.updateTileBackground(this.gridContainer.children[this.draggedIndex], this.tiles[this.draggedIndex]);
-                this.updateTileBackground(this.gridContainer.children[targetIndex], this.tiles[targetIndex]);
-                
-                this.checkVictory();
-                
-                if (navigator.vibrate) {
-                    navigator.vibrate(50);
-                }
-            } else {
-                this.removeEmptySlot(this.draggedIndex);
-            }
-            
-            this.removeFloatingTile();
-            this.draggedIndex = null;
-        }
-        
-        checkVictory() {
-            let isComplete = true;
-            
-            for (let i = 0; i < this.totalTiles; i++) {
-                if (this.tiles[i] !== i) {
-                    isComplete = false;
-                    break;
-                }
-            }
-            
-            if (isComplete && !this.levelCompleted) {
-                this.levelCompleted = true;
-                this.showVictory();
-            }
-        }
-        
-        showVictory() {
-            // Показываем полную картинку
-            this.fullImage.src = this.images[this.currentLevel];
-            this.modalMessage.innerHTML = `🎉 Поздравляем! Уровень ${this.currentLevel + 1} пройден! 🎉`;
-            this.modal.classList.add('active');
-            
-            // Запускаем конфетти
-            this.startConfetti();
-            
-            if (navigator.vibrate) {
-                navigator.vibrate([100, 50, 100]);
-            }
-        }
-        
-        startConfetti() {
-            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#88ff00'];
-            const confettiCount = 200;
-            
-            for (let i = 0; i < confettiCount; i++) {
-                setTimeout(() => {
-                    const confetti = document.createElement('div');
-                    confetti.className = 'confetti-piece';
-                    confetti.style.left = Math.random() * 100 + '%';
-                    confetti.style.width = Math.random() * 10 + 5 + 'px';
-                    confetti.style.height = Math.random() * 10 + 5 + 'px';
-                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0%';
-                    document.body.appendChild(confetti);
-                    
-                    setTimeout(() => {
-                        confetti.remove();
-                    }, 3500);
-                }, i * 15);
-            }
-        }
-        
-        closeModal() {
-            this.modal.classList.remove('active');
-            // Удаляем оставшиеся конфетти
-            document.querySelectorAll('.confetti-piece').forEach(c => c.remove());
-        }
-        
-        closeModalAndNext() {
-            this.closeModal();
-            this.nextLevel();
-        }
-        
-        shuffle() {
-            if (this.levelCompleted) {
-                this.showMessage('Уровень пройден! Перейдите на следующий', true);
-                return;
-            }
-            
-            this.shuffleArray(this.tiles);
-            this.removeAllEmptySlots();
-            this.updateAllTiles();
-            this.draggedIndex = null;
-            this.removeFloatingTile();
-            this.showMessage('🔀 Пазл перемешан!');
-            
-            if (navigator.vibrate) {
-                navigator.vibrate(30);
-            }
-        }
-        
-        reset() {
-            this.levelCompleted = false;
-            this.tiles = Array.from({ length: this.totalTiles }, (_, i) => i);
-            this.shuffleArray(this.tiles);
-            this.removeAllEmptySlots();
-            this.updateAllTiles();
-            this.draggedIndex = null;
-            this.removeFloatingTile();
-            this.closeModal();
-            this.showMessage('🔄 Уровень сброшен');
-        }
-        
-        nextLevel() {
-            if (this.currentLevel + 1 < this.images.length) {
-                this.loadLevel(this.currentLevel + 1);
-            } else {
-                this.showMessage('🎉 Это финал! Вы прошли ВСЕ уровни! 🎉');
-                this.modalMessage.innerHTML = '🏆 ВЕЛИКОЛЕПНО! Вы прошли ВСЕ уровни! 🏆';
-                setTimeout(() => {
-                    this.modal.classList.add('active');
-                }, 500);
-            }
-        }
-    }
-    
-    // Запуск игры
-    window.addEventListener('load', () => {
-        new PuzzleGame();
-    });
-</script>
+<!-- Экран выбора уровня -->
+<div id="levels-screen" class="screen hidden">
+    <h2>Выбери уровень</h2>
+    <div id="levels-grid" class="levels-grid"></div>
+    <button id="btn-back-menu" class="btn btn-secondary">← Назад</button>
+</div>
+
+<!-- Игровой экран -->
+<div id="game-screen" class="screen hidden">
+    <div class="game-header">
+        <button id="btn-back" class="btn btn-small">←</button>
+        <span id="level-title">Уровень 1</span>
+        <span id="move-counter" class="info-badge">Ходы: 0</span>
+        <span id="timer" class="info-badge">⏱ 00:00</span>
+    </div>
+
+    <div class="game-body">
+        <div class="puzzle-container">
+            <div id="puzzle-board" class="puzzle-board"></div>
+        </div>
+        <div class="side-panel">
+            <div class="preview-box">
+                <h3>Оригинал</h3>
+                <img id="preview-img" src="" alt="Превью">
+            </div>
+            <button id="btn-hint" class="btn btn-small">👁 Подсказка</button>
+            <button id="btn-shuffle" class="btn btn-small">🔀 Перемешать</button>
+        </div>
+    </div>
+
+    <!-- Подсказка (полная картинка поверх) -->
+    <div id="hint-overlay" class="hint-overlay hidden">
+        <img id="hint-img" src="" alt="Подсказка">
+        <p>Отпустите, чтобы скрыть</p>
+    </div>
+</div>
+
+<!-- Экран победы -->
+<div id="win-screen" class="screen hidden">
+    <div class="win-content">
+        <h1>🎉 Победа!</h1>
+        <p class="subtitle">Пазл собран!</p>
+        <div class="win-stats">
+            <div class="stat">
+                <span class="stat-value" id="win-moves">0</span>
+                <span class="stat-label">Ходов</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="win-time">00:00</span>
+                <span class="stat-label">Время</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="win-stars">⭐⭐⭐</span>
+                <span class="stat-label">Рейтинг</span>
+            </div>
+        </div>
+        <button id="btn-next-level" class="btn btn-primary">Следующий уровень →</button>
+        <button id="btn-win-menu" class="btn btn-secondary">🏠 Меню</button>
+    </div>
+</div>
+
+<!-- Уведомления -->
+<div id="toast" class="toast hidden"></div>
+
+<script src="game.js"></script>
 </body>
 </html>

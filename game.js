@@ -6,20 +6,12 @@
 const CONFIG = {
     imageFolder: 'images/',
     imageExtension: '.jpg',
-    // Сложность по уровням: [rows, cols]
+    // ⚡ Для локальных тестов укажите число вручную, чтобы не ждать автоопределения
+    forceTotalLevels: 0, // 0 = авто, 5 = фиксировано 5 уровней и т.д.
     difficulties: [
-        [2, 2],  // Уровень 1: 4 куска
-        [3, 3],  // Уровень 2: 9 кусков
-        [3, 4],  // Уровень 3: 12 кусков
-        [4, 4],  // Уровень 4: 16 кусков
-        [4, 5],  // Уровень 5: 20 кусков
-        [5, 5],  // Уровень 6: 25 кусков
-        [5, 6],  // Уровень 7: 30 кусков
-        [6, 6],  // Уровень 8: 36 кусков
-        [6, 7],  // Уровень 9: 42 куска
-        [7, 7],  // Уровень 10: 49 кусков
-        [7, 8],  // Уровень 11: 56 кусков
-        [8, 8],  // Уровень 12: 64 куска
+        [2, 2], [3, 3], [3, 4], [4, 4], [4, 5],
+        [5, 5], [5, 6], [6, 6], [6, 7], [7, 7],
+        [7, 8], [8, 8]
     ],
     boardMaxWidth: 500,
     boardMaxHeight: 500,
@@ -71,29 +63,30 @@ async function initYandexSDK() {
 }
 
 async function loadProgress() {
-    if (!player) return;
-    try {
-        const data = await player.getData();
-        if (data.completedLevels) {
-            state.completedLevels = new Set(data.completedLevels);
-        }
-        if (data.soundEnabled !== undefined) {
-            state.soundEnabled = data.soundEnabled;
-        }
-    } catch (e) {
-        console.log('Failed to load progress:', e);
+    // Локальное сохранение
+    const localData = JSON.parse(localStorage.getItem('puzzle_save') || '{}');
+    if (localData.completedLevels) state.completedLevels = new Set(localData.completedLevels);
+    if (localData.soundEnabled !== undefined) state.soundEnabled = localData.soundEnabled;
+
+    // Облако Яндекса (если доступно)
+    if (player) {
+        try {
+            const cloudData = await player.getData();
+            if (cloudData.completedLevels) state.completedLevels = new Set(cloudData.completedLevels);
+        } catch(e) {}
     }
 }
 
 async function saveProgress() {
-    if (!player) return;
-    try {
-        await player.setData({
-            completedLevels: Array.from(state.completedLevels),
-            soundEnabled: state.soundEnabled,
-        });
-    } catch (e) {
-        console.log('Failed to save progress:', e);
+    const saveData = {
+        completedLevels: Array.from(state.completedLevels),
+        soundEnabled: state.soundEnabled
+    };
+    // Всегда сохраняем локально
+    localStorage.setItem('puzzle_save', JSON.stringify(saveData));
+    // И в облако, если SDK загружен
+    if (player) {
+        try { await player.setData(saveData); } catch(e) {}
     }
 }
 
@@ -205,40 +198,28 @@ function getDifficulty(level) {
     return [base[0] + extraRows, base[1] + extraCols];
 }
 
-function detectTotalLevels() {
-    // Считаем, сколько картинок доступно
-    // Пробуем загрузить картинки до тех пор, пока не получим ошибку
-    return new Promise((resolve) => {
-        let count = 0;
-        let pending = 0;
+async function detectTotalLevels() {
+    if (CONFIG.forceTotalLevels > 0) return CONFIG.forceTotalLevels;
 
-        function tryImage(num) {
+    let count = 0;
+    const maxLevels = 15;
+
+    for (let i = 1; i <= maxLevels; i++) {
+        const exists = await new Promise(resolve => {
             const img = new Image();
-            img.onload = () => {
-                count = Math.max(count, num);
-                tryNext(num + 1);
-            };
-            img.onerror = () => {
-                // Проверяем несколько подряд, чтобы убедиться что картинки закончились
-                if (pending <= 0 && count > 0) {
-                    resolve(count);
-                }
-            };
-            pending++;
-            img.src = CONFIG.imageFolder + num + CONFIG.imageExtension;
-        }
+            // Таймаут 400мс гарантирует, что промис разрешится даже при блокировке file://
+            const t = setTimeout(() => resolve(false), 400);
+            
+            img.onload = () => { clearTimeout(t); resolve(true); };
+            img.onerror = () => { clearTimeout(t); resolve(false); };
+            // Добавляем timestamp чтобы обойти кэш браузера
+            img.src = `${CONFIG.imageFolder}${i}${CONFIG.imageExtension}?v=${Date.now()}`;
+        });
 
-        function tryNext(num) {
-            pending--;
-            if (num <= 20) { // максимум 20 уровней
-                tryImage(num);
-            } else if (pending <= 0) {
-                resolve(Math.max(count, 1));
-            }
-        }
-
-        tryImage(1);
-    });
+        if (exists) count = i;
+        else break; // Картинки закончились или недоступны
+    }
+    return Math.max(count, 0);
 }
 
 function renderLevelsGrid() {
@@ -720,25 +701,57 @@ document.getElementById('btn-win-menu').addEventListener('click', () => {
 
 /* ======================== INIT ======================== */
 async function init() {
-    // Инициализация Yandex SDK
-    await initYandexSDK();
+    try {
+        console.log('🚀 Запуск игры...');
+        
+        // 1. Скрываем загрузку СРАЗУ, даже если что-то пойдёт не так
+        document.getElementById('loading-screen').classList.add('hidden');
 
-    // Обновить кнопку звука
-    document.getElementById('btn-sound').textContent = state.soundEnabled ? '🔊' : '🔇';
+        // 2. SDK (локально просто пропустится)
+        try { await initYandexSDK(); } catch(e) {}
+        document.getElementById('btn-sound').textContent = state.soundEnabled ? '🔊' : '🔇';
 
-    // Определить количество уровней
-    state.totalLevels = await detectTotalLevels();
-    console.log(`Найдено ${state.totalLevels} уровней`);
+        // 3. Ищем картинки
+        state.totalLevels = await detectTotalLevels();
+        console.log(`✅ Найдено уровней: ${state.totalLevels}`);
 
-    // Если картинки не найдены, используем демо-данные
-    if (state.totalLevels === 0) {
-        console.warn('Картинки не найдены! Использую демо-режим.');
-        state.totalLevels = 1;
-        // Генерируем демо-картинку
-        generateDemoImage();
+        // 4. Если картинок нет или они заблокированы (file://) → демо-режим
+        if (state.totalLevels === 0) {
+            console.warn('🖼 Локальный запуск без сервера: картинки недоступны. Включён демо-режим.');
+            enableDemoMode();
+        }
+
+        showScreen('menu-screen');
+        console.log('🎮 Меню загружено! Можете играть.');
+    } catch (err) {
+        console.error('❌ Критическая ошибка:', err);
+        document.getElementById('loading-screen').innerHTML = 
+            `<p style="color:#ff6b6b; text-align:center; padding:40px; font-size:1.1rem;">
+                Ошибка загрузки: ${err.message}<br>
+                <small>Нажмите F12 → Console для подробностей</small>
+             </p>`;
     }
+}
 
-    showScreen('menu-screen');
+function enableDemoMode() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 400; canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+
+    const grad = ctx.createLinearGradient(0, 0, 400, 400);
+    grad.addColorStop(0, '#667eea'); grad.addColorStop(1, '#764ba2');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, 400, 400);
+
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 32px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('🧩 ДЕМО', 200, 160);
+    ctx.font = '16px Arial';
+    ctx.fillText('Запустите через локальный сервер', 200, 210);
+    ctx.fillText('для загрузки images/1.png и т.д.', 200, 240);
+
+    state.imageSrc = canvas.toDataURL();
+    state.imageLoaded = true;
+    state.totalLevels = 1;
+    CONFIG.forceTotalLevels = 1; // Фиксируем, чтобы не сканировать снова
 }
 
 function generateDemoImage() {

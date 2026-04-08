@@ -11,7 +11,8 @@ const CONFIG = {
         { count: 2, grid: [3, 3] }, // Уровни 1-20
         { count: 2, grid: [4, 3] }, // Уровни 21-40
         { count: 2, grid: [4, 4] }, // Уровни 41-60
-        { count: 2, grid: [5, 4] }  // Уровни 61-80 и далее (кап сложности)
+        { count: 2, grid: [5, 4] },  // Уровни 61-80
+        { count: 2, grid: [6, 4] }  // Уровни 81-100 и далее (кап сложности)
     ],
     boardMaxWidth: 500,
     boardMaxHeight: 750,
@@ -236,7 +237,7 @@ async function startLevel(level) {
     updateMoveCounter();
     resetTimerDisplay();
 
-    document.getElementById('preview-img').src = state.imageSrc;
+    //document.getElementById('preview-img').src = state.imageSrc;
     document.getElementById('hint-img').src = state.imageSrc;
 
     // Если демо-режим, создаём Image из dataURL
@@ -269,28 +270,53 @@ function buildBoard(img) {
     board.innerHTML = '';
     state.boardEl = board;
 
-    const maxW = Math.min(CONFIG.boardMaxWidth, window.innerWidth * 0.85);
-    const maxH = Math.min(CONFIG.boardMaxHeight, window.innerHeight * 0.55);
+    // Ширина = 90% экрана
+    const maxW = Math.min(CONFIG.boardMaxWidth, window.innerWidth * 0.9);
+    const maxH = Math.min(CONFIG.boardMaxHeight, window.innerHeight * 0.8);
+    
     const aspect = img.naturalWidth / img.naturalHeight;
     const boardW = maxW / maxH > aspect ? maxH * aspect : maxW;
     const boardH = boardW / aspect;
 
-    state.pieceWidth = boardW / state.cols;
-    state.pieceHeight = boardH / state.rows;
+    // Учитываем зазоры 1px при расчёте размера одного кусочка
+    const totalGapW = state.cols - 3;
+    const totalGapH = state.rows - 3;
+    
+    state.pieceWidth = (boardW - totalGapW) / state.cols;
+    state.pieceHeight = (boardH - totalGapH) / state.rows;
 
     board.style.gridTemplateColumns = `repeat(${state.cols}, ${state.pieceWidth}px)`;
     board.style.gridTemplateRows = `repeat(${state.rows}, ${state.pieceHeight}px)`;
-    board.style.width = `${boardW}px`;
-    board.style.height = `${boardH}px`;
+    //board.style.width = `${boardW}px`;
+    //board.style.height = `${boardH}px`;
+
+    // Создаём элемент подсветки целевой ячейки
+    const highlight = document.createElement('div');
+    highlight.id = 'target-highlight';
+    highlight.className = 'target-highlight';
+    highlight.style.width = `${state.pieceWidth}px`;
+    highlight.style.height = `${state.pieceHeight}px`;
+    board.appendChild(highlight);
+    state.highlightEl = highlight;
+
+    // Фон покрывает всю доску + небольшой запас от антиалиасинга
+    const bgW = boardW + 2;
+    const bgH = boardH + 2;
 
     for (let r = 0; r < state.rows; r++) {
         for (let c = 0; c < state.cols; c++) {
             const p = document.createElement('div');
             p.className = 'puzzle-piece';
+            p.style.width = `${state.pieceWidth}px`;
+            p.style.height = `${state.pieceHeight}px`;
             p.style.backgroundImage = `url(${state.imageSrc})`;
-            p.style.backgroundSize = `${boardW}px ${boardH}px`;
-            p.style.backgroundPosition = `-${c * state.pieceWidth}px -${r * state.pieceHeight}px`;
-            p.dataset.r = r; p.dataset.c = c;
+            p.style.backgroundSize = `${bgW}px ${bgH}px`;
+            
+            // Смещение фона: шаг = размер куска + 1px зазор
+            const bgX = -(c * (state.pieceWidth + 1));
+            const bgY = -(r * (state.pieceHeight + 1));
+            p.style.backgroundPosition = `${bgX}px ${bgY}px`;
+            
             p.addEventListener('pointerdown', onPointerDown);
             p.addEventListener('contextmenu', e => e.preventDefault());
             board.appendChild(p);
@@ -322,53 +348,123 @@ function placePiece(p) {
     p.el.classList.toggle('wrong', !(p.currentRow === p.correctRow && p.currentCol === p.correctCol));
 }
 
-/* ======================== DRAG & DROP ======================== */
+/* ======================== DRAG & DROP (КЛОН + МАТЕМАТИКА) ======================== */
 function onPointerDown(e) {
     e.preventDefault();
     const el = e.currentTarget;
     const piece = state.pieces.find(p => p.el === el);
     if (!piece) return;
+
     playSound('pickup');
-    el.classList.add('dragging');
-    state.dragState = { piece, startX: e.clientX, startY: e.clientY, overEl: null };
+    try { el.setPointerCapture(e.pointerId); } catch(err) {}
+
+    const rect = el.getBoundingClientRect();
+    state.dragState = {
+        piece: piece,
+        pointerId: e.pointerId,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top,
+        origRow: piece.currentRow,
+        origCol: piece.currentCol,
+        clone: null
+    };
+
+    // Создаём визуальный клон
+    const clone = el.cloneNode(true);
+    clone.classList.add('drag-clone');
+    clone.style.width = `${state.pieceWidth}px`;
+    clone.style.height = `${state.pieceHeight}px`;
+    clone.style.left = `${e.clientX - state.dragState.offsetX}px`;
+    clone.style.top = `${e.clientY - state.dragState.offsetY}px`;
+    document.body.appendChild(clone);
+    state.dragState.clone = clone;
+
+    // Оригинал на доске становится "пустой ячейкой"
+    el.classList.add('dragging-source');
+    el.style.pointerEvents = 'none';
+
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', onPointerUp);
 }
 
 function onPointerMove(e) {
-    if (!state.dragState) return;
-    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('.puzzle-piece');
-    if (state.dragState.overEl !== el) {
-        if (state.dragState.overEl) state.dragState.overEl.style.outline = '';
-        if (el && el !== state.dragState.piece.el) {
-            el.style.outline = '3px solid #ffd700';
-            state.dragState.overEl = el;
+    const ds = state.dragState;
+    if (!ds.clone) return;
+
+    // 1. Кусочек в руке следует за курсором
+    ds.clone.style.left = `${e.clientX - ds.offsetX}px`;
+    ds.clone.style.top = `${e.clientY - ds.offsetY}px`;
+
+    // 2. Подсветка целевой ячейки
+    if (state.highlightEl) {
+        const boardRect = state.boardEl.getBoundingClientRect();
+        const relX = e.clientX - boardRect.left;
+        const relY = e.clientY - boardRect.top;
+
+        // Шаг ячейки = размер куска + 1px зазор
+        const stepX = state.pieceWidth + 1;
+        const stepY = state.pieceHeight + 1;
+        
+        const targetCol = Math.floor(relX / stepX);
+        const targetRow = Math.floor(relY / stepY);
+
+        const isValid = targetCol >= 0 && targetCol < state.cols && targetRow >= 0 && targetRow < state.rows;
+        const isDifferent = !(targetRow === ds.origRow && targetCol === ds.origCol);
+        
+        if (isValid && isDifferent) {
+            state.highlightEl.style.gridRow = targetRow + 1;
+            state.highlightEl.style.gridColumn = targetCol + 1;
+            state.highlightEl.style.opacity = '1';
+            ds.targetRow = targetRow;
+            ds.targetCol = targetCol;
         } else {
-            state.dragState.overEl = null;
+            state.highlightEl.style.opacity = '0';
+            ds.targetRow = null;
+            ds.targetCol = null;
         }
     }
 }
 
 function onPointerUp(e) {
+    const ds = state.dragState;
+    if (!ds.piece || !ds.clone) return;
+
     document.removeEventListener('pointermove', onPointerMove);
     document.removeEventListener('pointerup', onPointerUp);
-    const { piece, overEl } = state.dragState;
-    piece.el.classList.remove('dragging');
-    if (overEl) overEl.style.outline = '';
+    try { ds.piece.el.releasePointerCapture(ds.pointerId); } catch(err) {}
 
-    const target = state.pieces.find(p => p.el === overEl);
-    if (target && target !== piece) {
-        [piece.currentRow, target.currentRow] = [target.currentRow, piece.currentRow];
-        [piece.currentCol, target.currentCol] = [target.currentCol, piece.currentCol];
-        placePiece(piece); placePiece(target);
-        state.moves++; updateMoveCounter();
-        playSound('swap');
-        if (piece.currentRow === piece.correctRow && piece.currentCol === piece.correctCol) playSound('pickup');
-        checkWin();
+    ds.clone.remove();
+    ds.piece.el.classList.remove('dragging-source');
+    ds.piece.el.style.pointerEvents = '';
+    
+    // Скрываем подсветку
+    if (state.highlightEl) state.highlightEl.style.opacity = '0';
+
+    // Берём координаты из move (или пересчитываем на случай резкого отпускания)
+    const targetRow = ds.targetRow !== null ? ds.targetRow : Math.floor((e.clientY - state.boardEl.getBoundingClientRect().top) / (state.pieceHeight + 1));
+    const targetCol = ds.targetCol !== null ? ds.targetCol : Math.floor((e.clientX - state.boardEl.getBoundingClientRect().left) / (state.pieceWidth + 1));
+
+    const isValid = targetCol >= 0 && targetCol < state.cols && targetRow >= 0 && targetRow < state.rows;
+    const isDifferent = !(targetRow === ds.origRow && targetCol === ds.origCol);
+
+    if (isValid && isDifferent) {
+        const targetPiece = state.pieces.find(p => p.currentRow === targetRow && p.currentCol === targetCol);
+        if (targetPiece && targetPiece !== ds.piece) {
+            [ds.piece.currentRow, targetPiece.currentRow] = [targetPiece.currentRow, ds.piece.currentRow];
+            [ds.piece.currentCol, targetPiece.currentCol] = [targetPiece.currentCol, ds.piece.currentCol];
+            
+            state.moves++;
+            updateMoveCounter();
+            playSound('swap');
+        }
     } else {
         playSound('drop');
     }
+
+    // CSS Grid сам расставит кусочки без наложений
+    state.pieces.forEach(p => placePiece(p));
     state.dragState = null;
+    setTimeout(checkWin, 50);
 }
 
 /* ======================== WIN & TIMER ======================== */
@@ -386,17 +482,23 @@ function checkWin() {
 }
 
 function showWinScreen() {
-    const stars = state.moves <= state.rows * state.cols * 1.5 ? '⭐⭐⭐' : state.moves <= state.rows * state.cols * 2.5 ? '⭐⭐' : '⭐';
+    // Устанавливаем полную картинку на экран победы
+    document.getElementById('win-img').src = state.imageSrc;
+
+    const totalPieces = state.rows * state.cols;
+    const stars = state.moves <= totalPieces * 1.5 ? '⭐⭐⭐' 
+               : state.moves <= totalPieces * 2.5 ? '⭐⭐' : '⭐';
+               
     document.getElementById('win-moves').textContent = state.moves;
     document.getElementById('win-time').textContent = formatTime(state.timerSeconds);
     document.getElementById('win-stars').textContent = stars;
 
     const nextBtn = document.getElementById('btn-next-level');
     if (state.currentLevel >= state.totalLevels) {
-        nextBtn.textContent = '🏆 Все уровни пройдены!';
+        nextBtn.textContent = '🏆 Все пройдены!';
         nextBtn.onclick = () => { playSound('click'); showScreen('menu-screen'); };
     } else {
-        nextBtn.textContent = 'Следующий уровень →';
+        nextBtn.textContent = 'Далее →';
         nextBtn.onclick = () => { playSound('click'); startLevel(state.currentLevel + 1); };
     }
     showScreen('win-screen');

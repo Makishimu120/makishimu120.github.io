@@ -37,27 +37,20 @@
 <!-- Игровой экран -->
 <div id="game-screen" class="screen hidden">
     <div class="game-header">
-        <button id="btn-back" class="btn btn-small">←</button>
+        <button id="btn-back" class="btn btn-compact">←</button>
         <span id="level-title">Уровень 1</span>
         <span id="move-counter" class="info-badge">Ходы: 0</span>
         <span id="timer" class="info-badge">⏱ 00:00</span>
+        <button id="btn-hint" class="btn btn-compact" title="Подсказка">👁</button>
+        <button id="btn-shuffle" class="btn btn-compact" title="Перемешать">🔀</button>
     </div>
 
     <div class="game-body">
         <div class="puzzle-container">
             <div id="puzzle-board" class="puzzle-board"></div>
         </div>
-        <div class="side-panel">
-            <div class="preview-box">
-                <h3>Оригинал</h3>
-                <img id="preview-img" src="" alt="Превью">
-            </div>
-            <button id="btn-hint" class="btn btn-small">👁 Подсказка</button>
-            <button id="btn-shuffle" class="btn btn-small">🔀 Перемешать</button>
-        </div>
     </div>
 
-    <!-- Подсказка (полная картинка поверх) -->
     <div id="hint-overlay" class="hint-overlay hidden">
         <img id="hint-img" src="" alt="Подсказка">
         <p>Отпустите, чтобы скрыть</p>
@@ -68,7 +61,7 @@
 <div id="win-screen" class="screen hidden">
     <div class="win-content">
         <h1>🎉 Победа!</h1>
-        <p class="subtitle">Пазл собран!</p>
+        <img id="win-img" class="win-img" src="" alt="Собранная картинка">
         <div class="win-stats">
             <div class="stat">
                 <span class="stat-value" id="win-moves">0</span>
@@ -83,8 +76,10 @@
                 <span class="stat-label">Рейтинг</span>
             </div>
         </div>
-        <button id="btn-next-level" class="btn btn-primary">Следующий уровень →</button>
-        <button id="btn-win-menu" class="btn btn-secondary">🏠 Меню</button>
+        <div class="win-buttons">
+            <button id="btn-next-level" class="btn btn-compact btn-primary">Далее →</button>
+            <button id="btn-win-menu" class="btn btn-compact btn-secondary">🏠 Меню</button>
+        </div>
     </div>
 </div>
 

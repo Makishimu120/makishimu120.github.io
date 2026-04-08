@@ -129,6 +129,29 @@ body {
     margin-bottom: 20px;
 }
 
+/* ===== КОМПАКТНЫЕ КНОПКИ ===== */
+.btn-compact {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    min-width: auto;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+.btn-compact:active { transform: scale(0.94); }
+.btn-compact:hover { background: rgba(255,255,255,0.2); }
+.btn-compact.btn-primary { background: #ffd700; color: #1a1a2e; font-weight: 600; }
+.btn-compact.btn-primary:hover { background: #ffcc00; }
+.btn-compact.btn-secondary { border: 1px solid rgba(255,255,255,0.25); }
+
 .level-btn {
     aspect-ratio: 1;
     border: 2px solid rgba(255,255,255,0.2);
@@ -179,72 +202,165 @@ body {
 .game-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     width: 100%;
-    max-width: 700px;
-    padding: 10px 0;
+    max-width: 95vw;
+    padding: 8px 4px;
     flex-wrap: wrap;
     justify-content: center;
+    margin: 0 auto;
 }
-
-.game-header #level-title {
-    font-weight: 700;
-    font-size: 1.1rem;
-}
-
-.info-badge {
-    background: rgba(255,255,255,0.1);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-}
+.game-header #level-title { font-weight: 600; font-size: 0.95rem; }
+.info-badge { font-size: 0.8rem; padding: 4px 8px; }
 
 .game-body {
     display: flex;
-    gap: 20px;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    margin-top: 10px;
+    margin-top: 8px;
+    flex-direction: column;
+}
+.puzzle-container { width: 90%; display: flex; justify-content: center; }
+
+/* ===== КАРТИНКА НА ЭКРАНЕ ПОБЕДЫ ===== */
+.win-img {
+    width: 200px;
+    max-width: 60vw;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 14px;
+    border: 3px solid rgba(255,215,0,0.6);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    margin: 12px 0 8px;
+    background: rgba(0,0,0,0.3);
+}
+
+/* ===== КНОПКИ ПОБЕДЫ ===== */
+.win-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 16px;
     flex-wrap: wrap;
 }
 
-.puzzle-container {
-    position: relative;
-}
+/* (Опционально) Убираем старые стили side-panel, если они остались */
+.side-panel, .preview-box { display: none !important; }
+
+/*.puzzle-container {
+    width: 90vw;          /* 0.9 от ширины экрана 
+    max-width: 90vw;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+}*/
 
 .puzzle-board {
     display: grid;
+    gap: 3px;             /* 1px между кусочками */
     background: rgba(255,255,255,0.05);
-    border: 3px solid rgba(255,255,255,0.15);
-    border-radius: 8px;
-    overflow: hidden;
+    border-radius: 6px;
+    overflow: visible;    /* чтобы подсветка не обрезалась */
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     touch-action: none;
+    position: relative;
+    max-width: 90%;
+    outline: 5px solid rgba(255, 255, 255, 0.15);
 }
 
 .puzzle-piece {
-    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px;   /* скругление 5px */
     cursor: grab;
-    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    transition: opacity 0.2s, transform 0.2s;
     position: relative;
     overflow: hidden;
+    touch-action: none;
+    z-index: 2;
+}
+
+/*.puzzle-piece.dragging-source {
+    opacity: 0.15;
+    border: 2px dashed rgba(255,215,0,0.6);
+    background: rgba(0,0,0,0.4);
+    pointer-events: none;
+}*/
+
+/* Место, откуда взяли кусочек */
+.dragging-source {
+    opacity: 0.2;
+    border: 2px dashed rgba(255,215,0,0.6);
+    background: rgba(0,0,0,0.5);
+    border-radius: 5px;
+    pointer-events: none;
+}
+
+/* Кусочек в руке */
+.drag-clone {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+    border-radius: 5px;   /* скругление 5px */
+    border: 2px solid #ffd700;
+    opacity: 0.95;
+    transition: none !important;
+}
+
+/* Подсветка места куда положим */
+.target-highlight {
+    position: absolute;
+    border-radius: 2px;   /* скругление 5px */
+    background: rgba(76,175,80,0.2);
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.12s ease-out;
+    z-index: 5;
+    transform: scale(0.95);
+    box-shadow: 0 0 0 2px #ffd700, 0 0 0 4px #ffaa00;
 }
 
 .puzzle-piece:active { cursor: grabbing; }
 
+/* Стиль перетаскиваемого кусочка */
 .puzzle-piece.dragging {
-    opacity: 0.6;
-    transform: scale(0.95);
-    box-shadow: 0 0 20px rgba(255,215,0,0.5);
-    z-index: 10;
+    position: fixed !important;
+    z-index: 9999;
+    pointer-events: none; /* Пропускает события сквозь себя, чтобы найти элемент под курсором */
+    opacity: 0.9;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+    border-radius: 6px;
+    transition: none !important; /* Отключаем плавность при drag для мгновенной реакции */
+    cursor: grabbing;
 }
 
+/* Пустое место на доске */
+.empty-slot {
+    background: rgba(255,255,255,0.03);
+    border: 2px dashed rgba(255,255,255,0.25);
+    border-radius: 6px;
+    animation: slotPulse 1.5s infinite alternate;
+}
+
+@keyframes slotPulse {
+    from { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.02); }
+    to { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.06); }
+}
+
+/* Подсветка цели обмена 
+.target-highlight {
+    outline: 3px solid #ffd700;
+    outline-offset: -3px;
+    z-index: 5;
+}*/
+
 .puzzle-piece.correct {
-    border-color: rgba(76,175,80,0.4);
+    outline: 2px solid #4caf50;
+    outline-offset: -2px; /* Рисуется внутри, не меняет размер */
 }
 
 .puzzle-piece.wrong {
-    border-color: rgba(255,100,100,0.3);
+    outline: 2px solid rgba(255,100,100,0.6);
+    outline-offset: -2px;
 }
 
 /* ===== SIDE PANEL ===== */
@@ -388,8 +504,8 @@ body {
     .side-panel { flex-direction: row; flex-wrap: wrap; justify-content: center; }
 
     .puzzle-board {
-        max-width: 90vw !important;
-        max-height: 60vh !important;
+        max-width: 95vw !important;
+        max-height: 95vh !important;
     }
 
     .levels-grid {
@@ -397,6 +513,4 @@ body {
     }
 
     .win-stats { gap: 15px; }
-
-    .btn { min-width: 160px; padding: 12px 24px; }
 }

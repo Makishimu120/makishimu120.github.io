@@ -264,7 +264,7 @@ body {
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     touch-action: none;
     position: relative;
-    max-width: 90%;
+    /*max-width: 100%;*/
     outline: 5px solid rgba(255, 255, 255, 0.15);
 }
 
